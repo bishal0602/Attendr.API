@@ -1,5 +1,7 @@
-﻿using Attendr.API.Extensions;
-using Serilog;
+﻿using Serilog;
+using Attendr.API.DbContexts;
+using Attendr.API.Extensions;
+using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 
 namespace Attendr.API
@@ -15,7 +17,11 @@ namespace Attendr.API
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddHttpContextAccessor();
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddNewtonsoftJson(options =>
+                {
+                    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                });
             builder.Services.ConfigureCors();
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -23,6 +29,13 @@ namespace Attendr.API
             builder.Services.ConfigureAuthorization();
 
             builder.Services.AddAutoMapper(typeof(Program));
+            builder.Services.ConfigureHelpers();
+            builder.Services.ConfigureServices();
+
+            builder.Services.AddDbContext<AttendrAPIDbContext>(dbContextOptions =>
+            {
+                dbContextOptions.UseSqlServer(builder.Configuration["ConnectionStrings:AttendrAPIDB"]!);
+            });
 
             return builder.Build();
         }
