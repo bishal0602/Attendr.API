@@ -1,5 +1,6 @@
 ﻿using Attendr.API.Extensions;
 using Serilog;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace Attendr.API
 {
@@ -10,12 +11,17 @@ namespace Attendr.API
         {
             builder.Host.UseSerilog();
 
-            // Swagger
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.AddHttpContextAccessor();
             builder.Services.AddControllers();
             builder.Services.ConfigureCors();
+
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            builder.Services.ConfigureIdentityServer();
+            builder.Services.ConfigureAuthorization();
+
             builder.Services.AddAutoMapper(typeof(Program));
 
             return builder.Build();
@@ -32,6 +38,7 @@ namespace Attendr.API
             app.ConfigureCustomExceptionMiddleware();
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();

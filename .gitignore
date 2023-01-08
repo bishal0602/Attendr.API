@@ -8,6 +8,8 @@ appsettings.json
 appsettings.Development.json
 appsettings.Production.json
 Migrations
+DataStore
+Controllers/TestController.cs
 
 
 # User-specific files
