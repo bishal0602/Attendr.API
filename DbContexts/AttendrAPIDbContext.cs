@@ -9,10 +9,10 @@ namespace Attendr.API.DbContexts
         public DbSet<Class> Classes { get; set; } = null!;
         public DbSet<Attendance> Attendances { get; set; } = null!;
         public DbSet<AttendanceReport> AttendanceReports { get; set; } = null!;
-        public DbSet<Routine> DayRoutines { get; set; } = null!;
+        public DbSet<Routine> Routines { get; set; } = null!;
         public DbSet<Period> Periods { get; set; } = null!;
         public DbSet<Semester> Semesters { get; set; } = null!;
-        public DbSet<TeacherSubject> TeacherSubjects { get; set; } = null!;
+        public DbSet<Teacher> Teachers { get; set; } = null!;
         public AttendrAPIDbContext(DbContextOptions<AttendrAPIDbContext> options) : base(options)
         {
 
@@ -20,7 +20,10 @@ namespace Attendr.API.DbContexts
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<AttendanceReport>().HasOne(a => a.Student).WithMany(s => s.AttendanceReports).OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<AttendanceReport>().HasOne(ar => ar.Student).WithMany(s => s.AttendanceReports).OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<Attendance>().HasOne(a => a.Teacher).WithMany(t => t.Attendances).OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<Period>().HasOne(a => a.Teacher).WithMany(p => p.Periods).OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<Period>().HasOne(p => p.Routine).WithMany(r => r.Periods).OnDelete(DeleteBehavior.NoAction);
 
             base.OnModelCreating(modelBuilder);
         }

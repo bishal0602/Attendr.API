@@ -8,7 +8,7 @@
         public string EndTime { get; set; }
         public Routine Routine { get; set; }
         public Guid RoutineId { get; set; }
-        public TeacherSubject TeacherSubject { get; set; }
-        public Guid TeacherSubjectId { get; set; }
+        public Teacher Teacher { get; set; }
+        public Guid TeacherId { get; set; }
     }
 }

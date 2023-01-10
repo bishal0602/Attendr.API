@@ -9,5 +9,6 @@
         //public SemesterRoutine SemesterRoutine { get; set; }
         //public Guid SemesterRoutineId { get; set; }
         public List<Routine> Routines { get; set; } = new List<Routine>();
+        public List<Teacher> Teachers { get; set; } = new List<Teacher>();
     }
 }
