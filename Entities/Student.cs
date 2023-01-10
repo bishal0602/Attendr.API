@@ -11,16 +11,7 @@ namespace Attendr.API.Entities
         public Guid ClassId { get; set; }
         public Class Class { get; set; }
 
-        //public Student(string name, string email, Guid classId)
-        //{
-        //    Name = name;
-        //    Email = email;
-        //    ClassId = classId;
-        //}
-        //public Student()
-        //{
-
-        //}
+        public List<AttendanceReport> AttendanceReports { get; set; } = new List<AttendanceReport>();
 
     }
 }

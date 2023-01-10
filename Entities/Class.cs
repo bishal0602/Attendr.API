@@ -8,12 +8,8 @@ namespace Attendr.API.Entities
         public string Year { get; set; }
         public string Department { get; set; }
         public string Group { get; set; }
+        public List<Semester> Semesters { get; set; } = new List<Semester>();
         public List<Student> Students { get; set; } = new List<Student>();
-        //public Class(string year, string department, string group)
-        //{
-        //    Year = year;
-        //    Department = department;
-        //    Group = group;
-        //}
+        public List<Attendance> Attendances { get; set; } = new List<Attendance>();
     }
 }

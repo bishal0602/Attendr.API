@@ -2,11 +2,15 @@
 using Attendr.API.Entities;
 using Attendr.API.Helpers;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace Attendr.API.Services
 {
     public class ClassRepository : IClassRepository
     {
+        private static readonly string[] ordinalCounts = new string[] { "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth" };
+        private static readonly string[] weekdays = new string[] { "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday" };
+
         private readonly AttendrAPIDbContext _context;
         private readonly IClassStudentHelper _classStudentHelper;
 
@@ -20,6 +24,9 @@ namespace Attendr.API.Services
         {
             List<Student> studentsInClass = _classStudentHelper.GetAllStudentsBelongingToClass(classToAdd.Year, classToAdd.Department, classToAdd.Group);
             classToAdd.Students.AddRange(studentsInClass);
+
+            classToAdd.Semesters.AddRange(GenerateSemesters());
+
             await _context.Classes.AddAsync(classToAdd);
         }
 
@@ -28,13 +35,17 @@ namespace Attendr.API.Services
             return await _context.Classes.ToListAsync();
         }
 
-        public async Task<Class?> GetClassByIdAsync(Guid classId)
+        public async Task<Class?> GetClassByIdAsync(Guid classId, bool includeStudents = false, bool includeRoutine = false)
         {
-            return await _context.Classes.Include(c => c.Students).FirstOrDefaultAsync(c => c.Id == classId);
+            IQueryable<Class> classCollection = _context.Classes.Include(c => c.Students.Where(s => includeStudents)).Include(c => c.Semesters.Where(sem => includeRoutine)).ThenInclude(sem => sem.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.TeacherSubject);
+
+            return await classCollection.FirstOrDefaultAsync(c => c.Id == classId);
         }
-        public async Task<Class?> GetClassByYearDepartGroupAsync(string classYear, string classDepartment, string classGroup)
+        public async Task<Class?> GetClassByYearDepartGroupAsync(string classYear, string classDepartment, string classGroup, bool includeStudents = false, bool includeRoutine = false)
         {
-            return await _context.Classes.Include(c => c.Students).FirstOrDefaultAsync(c => c.Year == classYear && c.Department == classDepartment && c.Group == classGroup);
+            IQueryable<Class> classCollection = _context.Classes.Include(c => c.Students.Where(s => includeStudents)).Include(c => c.Semesters.Where(sem => includeRoutine)).ThenInclude(sem => sem.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.TeacherSubject);
+
+            return await classCollection.FirstOrDefaultAsync(c => c.Year == classYear && c.Department == classDepartment && c.Group == classGroup);
         }
 
         public async Task<bool> ExistsClassAsync(string classYear, string classDepartment, string classGroup)
@@ -45,6 +56,31 @@ namespace Attendr.API.Services
         public async Task<bool> SaveAsync()
         {
             return (await _context.SaveChangesAsync() >= 0);
+        }
+
+
+
+        private List<Semester> GenerateSemesters()
+        {
+            List<Semester> semesters = new List<Semester>();
+            foreach (string ordinal in ordinalCounts)
+            {
+                Semester semester = new Semester() { Name = ordinal };
+                semester.Routines.AddRange(GenerateDayRoutines());
+                semesters.Add(semester);
+
+            }
+            return semesters;
+        }
+
+        private List<Routine> GenerateDayRoutines()
+        {
+            List<Routine> dayRoutines = new List<Routine>();
+            foreach (string weekday in weekdays)
+            {
+                dayRoutines.Add(new Routine() { WeekDay = weekday });
+            }
+            return dayRoutines;
         }
     }
 }

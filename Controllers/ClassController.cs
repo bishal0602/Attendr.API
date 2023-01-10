@@ -36,17 +36,13 @@ namespace Attendr.API.Controllers
         }
 
         [HttpGet("{classId}", Name = "GetClassById")]
-        public async Task<IActionResult> GetClassById([FromRoute] Guid classId, [FromQuery] bool includeStudents = false)
+        public async Task<IActionResult> GetClassById([FromRoute] Guid classId, [FromQuery] bool includeStudents = true, bool includeRoutine = true)
         {
-            var classFromDb = await _classRepository.GetClassByIdAsync(classId);
+            var classFromDb = await _classRepository.GetClassByIdAsync(classId, includeStudents, includeRoutine);
 
             if (classFromDb is null)
                 return NotFound(new ErrorDetails(StatusCodes.Status404NotFound, $"Class with id {classId} does not exist!"));
 
-            if (includeStudents)
-            {
-                return Ok(_mapper.Map<ClassWithStudentsDto>(classFromDb));
-            }
             return Ok(_mapper.Map<ClassDto>(classFromDb));
         }
 
@@ -72,7 +68,7 @@ namespace Attendr.API.Controllers
         }
 
         [HttpGet("myclass")]
-        public async Task<IActionResult> GetLoggedInUsersClass([FromQuery] bool includeStudents = true)
+        public async Task<IActionResult> GetLoggedInUsersClass([FromQuery] bool includeStudents = true, [FromQuery] bool includeRoutine = true)
         {
             var userClaims = ((ClaimsIdentity)User.Identity!).Claims;
             var userEmail = userClaims.FirstOrDefault(c => c.Type == "email")?.Value;
@@ -82,15 +78,11 @@ namespace Attendr.API.Controllers
             }
             (string studentYear, string studentDepartment, string studentGroup) = _classStudentHelper.GetStudentsClassDetailsFromEmail(userEmail);
 
-            var classFromDb = await _classRepository.GetClassByYearDepartGroupAsync(studentYear, studentDepartment, studentGroup);
+            var classFromDb = await _classRepository.GetClassByYearDepartGroupAsync(studentYear, studentDepartment, studentGroup, includeStudents, includeRoutine);
 
             if (classFromDb is null)
                 return NotFound(new ErrorDetails(StatusCodes.Status404NotFound, "User is not assigned to class"));
 
-            if (includeStudents)
-            {
-                return Ok(_mapper.Map<ClassWithStudentsDto>(classFromDb));
-            }
             return Ok(_mapper.Map<ClassDto>(classFromDb));
         }
 
