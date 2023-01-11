@@ -7,6 +7,7 @@ namespace Attendr.API.Extensions
         public static void ConfigureServices(this IServiceCollection services)
         {
             services.AddScoped<IClassRepository, ClassRepository>();
+            services.AddScoped<ITeacherRepository, TeacherRepository>();
         }
     }
 }

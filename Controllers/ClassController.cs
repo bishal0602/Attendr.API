@@ -26,7 +26,19 @@ namespace Attendr.API.Controllers
             _classStudentHelper = classStudentHelper ?? throw new ArgumentNullException(nameof(classStudentHelper));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
+        private async Task<Entities.Class?> GetUsersClassAsync(bool includeStudents = false, bool includeRoutine = false)
+        {
+            var userClaims = ((ClaimsIdentity)User.Identity!).Claims;
+            var userEmail = userClaims.FirstOrDefault(c => c.Type == "email")?.Value;
+            if (userEmail == null)
+            {
+                throw new Exception("No email provided in claims");
+            }
+            (string studentYear, string studentDepartment, string studentGroup) = _classStudentHelper.GetStudentsClassDetailsFromEmail(userEmail);
 
+            var classFromDb = await _classRepository.GetClassByYearDepartGroupAsync(studentYear, studentDepartment, studentGroup, includeStudents, includeRoutine);
+            return classFromDb;
+        }
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ClassDto>>> GetClasses()
         {
@@ -36,7 +48,7 @@ namespace Attendr.API.Controllers
         }
 
         [HttpGet("{classId}", Name = "GetClassById")]
-        public async Task<IActionResult> GetClassById([FromRoute] Guid classId, [FromQuery] bool includeStudents = true, bool includeRoutine = true)
+        public async Task<IActionResult> GetClassById([FromRoute] Guid classId, [FromQuery] bool includeStudents = false, bool includeRoutine = false)
         {
             var classFromDb = await _classRepository.GetClassByIdAsync(classId, includeStudents, includeRoutine);
 
@@ -68,22 +80,26 @@ namespace Attendr.API.Controllers
         }
 
         [HttpGet("myclass")]
-        public async Task<IActionResult> GetLoggedInUsersClass([FromQuery] bool includeStudents = true, [FromQuery] bool includeRoutine = true)
+        public async Task<IActionResult> GetLoggedInUsersClass([FromQuery] bool includeStudents = false, [FromQuery] bool includeRoutine = false)
         {
-            var userClaims = ((ClaimsIdentity)User.Identity!).Claims;
-            var userEmail = userClaims.FirstOrDefault(c => c.Type == "email")?.Value;
-            if (userEmail == null)
-            {
-                throw new Exception("No email provided in claims");
-            }
-            (string studentYear, string studentDepartment, string studentGroup) = _classStudentHelper.GetStudentsClassDetailsFromEmail(userEmail);
 
-            var classFromDb = await _classRepository.GetClassByYearDepartGroupAsync(studentYear, studentDepartment, studentGroup, includeStudents, includeRoutine);
-
-            if (classFromDb is null)
+            var userClass = GetLoggedInUsersClass(includeStudents, includeRoutine);
+            if (userClass is null)
                 return NotFound(new ErrorDetails(StatusCodes.Status404NotFound, "User is not assigned to class"));
 
-            return Ok(_mapper.Map<ClassDto>(classFromDb));
+            return Ok(_mapper.Map<ClassDto>(userClass));
+        }
+
+        [HttpGet("myclass/semesters")]
+        public async Task<ActionResult<IEnumerable<SemesterDto>>> GetSemesters()
+        {
+            var userClass = await GetUsersClassAsync();
+            if (userClass is null)
+            {
+                return NotFound(new ErrorDetails(StatusCodes.Status404NotFound, "User is not assigned to class"));
+            }
+            var semesters = await _classRepository.GetSemestersAsync(userClass.Id);
+            return Ok(_mapper.Map<List<SemesterDto>>(semesters));
         }
 
     }

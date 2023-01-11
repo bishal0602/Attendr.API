@@ -20,6 +20,28 @@ namespace Attendr.API.Services
             _classStudentHelper = classStudentHelper ?? throw new ArgumentNullException(nameof(classStudentHelper));
         }
 
+        private List<Semester> GenerateSemesters()
+        {
+            List<Semester> semesters = new List<Semester>();
+            foreach (string ordinal in ordinalCounts)
+            {
+                Semester semester = new Semester() { Name = ordinal };
+                semester.Routines.AddRange(GenerateDayRoutines());
+                semesters.Add(semester);
+
+            }
+            return semesters;
+        }
+        private List<Routine> GenerateDayRoutines()
+        {
+            List<Routine> dayRoutines = new List<Routine>();
+            foreach (string weekday in weekdays)
+            {
+                dayRoutines.Add(new Routine() { WeekDay = weekday });
+            }
+            return dayRoutines;
+        }
+
         public async Task AddClassWithStudentsAsync(Class classToAdd)
         {
             List<Student> studentsInClass = _classStudentHelper.GetAllStudentsBelongingToClass(classToAdd.Year, classToAdd.Department, classToAdd.Group);
@@ -37,13 +59,13 @@ namespace Attendr.API.Services
 
         public async Task<Class?> GetClassByIdAsync(Guid classId, bool includeStudents = false, bool includeRoutine = false)
         {
-            IQueryable<Class> classCollection = _context.Classes.Include(c => c.Students.Where(s => includeStudents)).Include(c => c.Semesters.Where(sem => includeRoutine)).ThenInclude(sem => sem.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.TeacherSubject);
+            IQueryable<Class> classCollection = _context.Classes.Include(c => c.Students.Where(s => includeStudents)).Include(c => c.Semesters.Where(sem => includeRoutine)).ThenInclude(sem => sem.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.Teacher);
 
             return await classCollection.FirstOrDefaultAsync(c => c.Id == classId);
         }
         public async Task<Class?> GetClassByYearDepartGroupAsync(string classYear, string classDepartment, string classGroup, bool includeStudents = false, bool includeRoutine = false)
         {
-            IQueryable<Class> classCollection = _context.Classes.Include(c => c.Students.Where(s => includeStudents)).Include(c => c.Semesters.Where(sem => includeRoutine)).ThenInclude(sem => sem.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.TeacherSubject);
+            IQueryable<Class> classCollection = _context.Classes.Include(c => c.Students.Where(s => includeStudents)).Include(c => c.Semesters.Where(sem => includeRoutine)).ThenInclude(sem => sem.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.Teacher);
 
             return await classCollection.FirstOrDefaultAsync(c => c.Year == classYear && c.Department == classDepartment && c.Group == classGroup);
         }
@@ -53,34 +75,25 @@ namespace Attendr.API.Services
             return await _context.Classes.AnyAsync(c => c.Year == classYear && c.Department == classDepartment && c.Group == classGroup);
         }
 
+
+        public async Task<List<Semester>> GetSemestersAsync(Guid classId)
+        {
+            return await _context.Semesters.Where(s => s.ClassId == classId).ToListAsync();
+        }
         public async Task<bool> SaveAsync()
         {
             return (await _context.SaveChangesAsync() >= 0);
         }
 
-
-
-        private List<Semester> GenerateSemesters()
+        public async Task<Guid> GetSemesterIdAsync(string studentYear, string studentDepartment, string studentGroup, string semesterNumber)
         {
-            List<Semester> semesters = new List<Semester>();
-            foreach (string ordinal in ordinalCounts)
-            {
-                Semester semester = new Semester() { Name = ordinal };
-                semester.Routines.AddRange(GenerateDayRoutines());
-                semesters.Add(semester);
-
-            }
-            return semesters;
-        }
-
-        private List<Routine> GenerateDayRoutines()
-        {
-            List<Routine> dayRoutines = new List<Routine>();
-            foreach (string weekday in weekdays)
-            {
-                dayRoutines.Add(new Routine() { WeekDay = weekday });
-            }
-            return dayRoutines;
+            var classId = (await GetClassByYearDepartGroupAsync(studentYear, studentDepartment, studentGroup))?.Id;
+            if (classId is null)
+                throw new Exception("User could not be mapped to class");
+            var semester = await _context.Semesters.FirstOrDefaultAsync(s => s.Name == semesterNumber.Trim().ToLower() && s.ClassId == classId);
+            if (semester is null)
+                throw new Exception($"Semester with name {semesterNumber} could not be found");
+            return semester.Id;
         }
     }
 }
