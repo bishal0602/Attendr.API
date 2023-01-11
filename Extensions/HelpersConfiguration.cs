@@ -7,6 +7,7 @@ namespace Attendr.API.Extensions
         public static void ConfigureHelpers(this IServiceCollection services)
         {
             services.AddScoped<IClassStudentHelper, ClassStudentHelper>();
+            services.AddScoped<IIdentityHelper, IdentityHelper>();
         }
     }
 }

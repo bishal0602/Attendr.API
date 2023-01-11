@@ -17,27 +17,17 @@ namespace Attendr.API.Controllers
     public class ClassController : ControllerBase
     {
         private readonly IClassRepository _classRepository;
-        private readonly IClassStudentHelper _classStudentHelper;
+        private readonly IIdentityHelper _identityHelper;
         private readonly IMapper _mapper;
 
-        public ClassController(IClassRepository classRepository, IClassStudentHelper classStudentHelper, IMapper mapper)
+        public ClassController(IClassRepository classRepository,
+
+                               IIdentityHelper identityHelper,
+                               IMapper mapper)
         {
             _classRepository = classRepository ?? throw new ArgumentNullException(nameof(classRepository));
-            _classStudentHelper = classStudentHelper ?? throw new ArgumentNullException(nameof(classStudentHelper));
+            _identityHelper = identityHelper ?? throw new ArgumentNullException(nameof(identityHelper));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-        }
-        private async Task<Entities.Class?> GetUsersClassAsync(bool includeStudents = false, bool includeRoutine = false)
-        {
-            var userClaims = ((ClaimsIdentity)User.Identity!).Claims;
-            var userEmail = userClaims.FirstOrDefault(c => c.Type == "email")?.Value;
-            if (userEmail == null)
-            {
-                throw new Exception("No email provided in claims");
-            }
-            (string studentYear, string studentDepartment, string studentGroup) = _classStudentHelper.GetStudentsClassDetailsFromEmail(userEmail);
-
-            var classFromDb = await _classRepository.GetClassByYearDepartGroupAsync(studentYear, studentDepartment, studentGroup, includeStudents, includeRoutine);
-            return classFromDb;
         }
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ClassDto>>> GetClasses()
@@ -93,7 +83,7 @@ namespace Attendr.API.Controllers
         [HttpGet("myclass/semesters")]
         public async Task<ActionResult<IEnumerable<SemesterDto>>> GetSemesters()
         {
-            var userClass = await GetUsersClassAsync();
+            var userClass = await _identityHelper.GetClassUsingIdentityAsync(User);
             if (userClass is null)
             {
                 return NotFound(new ErrorDetails(StatusCodes.Status404NotFound, "User is not assigned to class"));

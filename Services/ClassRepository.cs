@@ -85,14 +85,14 @@ namespace Attendr.API.Services
             return (await _context.SaveChangesAsync() >= 0);
         }
 
-        public async Task<Guid> GetSemesterIdAsync(string studentYear, string studentDepartment, string studentGroup, string semesterNumber)
+        public async Task<Guid> GetSemesterIdAsync(string studentYear, string studentDepartment, string studentGroup, string semesterName)
         {
             var classId = (await GetClassByYearDepartGroupAsync(studentYear, studentDepartment, studentGroup))?.Id;
             if (classId is null)
                 throw new Exception("User could not be mapped to class");
-            var semester = await _context.Semesters.FirstOrDefaultAsync(s => s.Name == semesterNumber.Trim().ToLower() && s.ClassId == classId);
+            var semester = await _context.Semesters.FirstOrDefaultAsync(s => s.Name == semesterName.Trim().ToLower() && s.ClassId == classId);
             if (semester is null)
-                throw new Exception($"Semester with name {semesterNumber} could not be found");
+                throw new Exception($"Semester with name {semesterName} could not be found");
             return semester.Id;
         }
     }

@@ -17,30 +17,16 @@ namespace Attendr.API.Controllers
     public class TeacherController : ControllerBase
     {
         private readonly ITeacherRepository _teacherRepository;
-        private readonly IClassRepository _classRepository;
-        private readonly IClassStudentHelper _classStudentHelper;
+        private readonly IIdentityHelper _identityHelper;
         private readonly IMapper _mapper;
 
-        public TeacherController(ITeacherRepository teacherRepository, IClassRepository classRepository, IClassStudentHelper classStudentHelper, IMapper mapper)
+        public TeacherController(ITeacherRepository teacherRepository, IIdentityHelper identityHelper, IMapper mapper)
         {
             _teacherRepository = teacherRepository ?? throw new ArgumentNullException(nameof(teacherRepository));
-            _classRepository = classRepository ?? throw new ArgumentNullException(nameof(classRepository));
-            _classStudentHelper = classStudentHelper ?? throw new ArgumentNullException(nameof(classStudentHelper));
+            _identityHelper = identityHelper ?? throw new ArgumentNullException(nameof(identityHelper));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        private async Task<Guid> GetSemesterIdUsingUserIdentityAsync(string semesterName)
-        {
-            var userClaims = ((ClaimsIdentity)User.Identity!).Claims;
-            var userEmail = userClaims.FirstOrDefault(c => c.Type == "email")?.Value;
-            if (userEmail == null)
-            {
-                throw new Exception("No email provided in claims");
-            }
-            (string studentYear, string studentDepartment, string studentGroup) = _classStudentHelper.GetStudentsClassDetailsFromEmail(userEmail);
-
-            return await _classRepository.GetSemesterIdAsync(studentYear, studentDepartment, studentGroup, semesterName);
-        }
 
         [HttpGet("{teacherId}", Name = "GetTeacherById")]
         public async Task<ActionResult<TeacherDto>> GetTeacher([FromRoute] Guid teacherId)
@@ -57,7 +43,7 @@ namespace Attendr.API.Controllers
         public async Task<IActionResult> CreateTeacher([FromBody] TeacherForCreationDto teacher)
         {
             var teacherToAdd = _mapper.Map<Entities.Teacher>(teacher);
-            teacherToAdd.SemesterId = await GetSemesterIdUsingUserIdentityAsync(teacher.SemesterName);
+            teacherToAdd.SemesterId = await _identityHelper.GetSemesterIdUsingUserIdentityAsync(User, teacher.SemesterName);
             await _teacherRepository.CreateTeacherAsync(teacherToAdd);
             await _teacherRepository.SaveAsync();
 
