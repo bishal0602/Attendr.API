@@ -73,7 +73,7 @@ namespace Attendr.API.Controllers
         public async Task<IActionResult> GetLoggedInUsersClass([FromQuery] bool includeStudents = false, [FromQuery] bool includeRoutine = false)
         {
 
-            var userClass = GetLoggedInUsersClass(includeStudents, includeRoutine);
+            var userClass = await _identityHelper.GetClassUsingIdentityAsync(User, includeStudents, includeRoutine);
             if (userClass is null)
                 return NotFound(new ErrorDetails(StatusCodes.Status404NotFound, "User is not assigned to class"));
 

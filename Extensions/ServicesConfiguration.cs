@@ -9,6 +9,7 @@ namespace Attendr.API.Extensions
             services.AddScoped<IClassRepository, ClassRepository>();
             services.AddScoped<ITeacherRepository, TeacherRepository>();
             services.AddScoped<IRoutineRepository, RoutineRepository>();
+            services.AddScoped<IAttendanceRepository, AttendanceRepository>();
         }
     }
 }

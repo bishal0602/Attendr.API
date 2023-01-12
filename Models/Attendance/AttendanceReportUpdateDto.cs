@@ -1,12 +1,10 @@
-﻿namespace Attendr.API.Entities
+﻿namespace Attendr.API.Models.Attendance
 {
-    public class AttendanceReport
+    public class AttendanceReportUpdateDto
     {
         public Guid Id { get; set; }
-        public Student Student { get; set; }
         public Guid StudentId { get; set; }
         public bool? isPresent { get; set; }
-        public Attendance Attendance { get; set; }
         public Guid AttendanceId { get; set; }
     }
 }
