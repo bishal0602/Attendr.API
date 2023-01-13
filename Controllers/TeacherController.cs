@@ -55,5 +55,23 @@ namespace Attendr.API.Controllers
             },
                 new { result = "Teacher successfully created!", details = "Check Loaction header to navigate!" }); // TODO : Standardize creation response
         }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<TeacherDto>>> GetSemesterTeachers([FromQuery] string? semester = null)
+        {
+            if (string.IsNullOrWhiteSpace(semester))
+            {
+                throw new ArgumentException($"Query parameter '{nameof(semester)}' cannot be null or whitespace.", nameof(semester));
+            }
+
+            // TODO  check for semester validity
+
+            Guid classId = (await _identityHelper.GetClassUsingIdentityAsync(User))!.Id;
+
+            var teachers = await _teacherRepository.GetSemesterTeachersAsync(classId, semester);
+            IEnumerable<TeacherDto> teachersToReturn = _mapper.Map<List<TeacherDto>>(teachers);
+
+            return Ok(teachersToReturn);
+        }
     }
 }

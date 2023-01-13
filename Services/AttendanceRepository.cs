@@ -1,5 +1,6 @@
 ﻿using Attendr.API.DbContexts;
 using Attendr.API.Entities;
+using Attendr.API.Services.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +17,7 @@ namespace Attendr.API.Services
 
         public async Task<Attendance?> GetAttendanceAsync(Guid teacherId, DateTime date)
         {
-            return await _context.Attendances.Include(a => a.AttendanceReports).ThenInclude(ar => ar.Student).FirstOrDefaultAsync(a => a.TeacherId == teacherId && a.Date == date);
+            return await _context.Attendances.Include(a => a.AttendanceReports).FirstOrDefaultAsync(a => a.TeacherId == teacherId && a.Date == date);
         }
 
         public async Task<Attendance> CreateAttendanceAsync(Guid teacherId, Guid classId, DateTime date)
@@ -35,8 +36,9 @@ namespace Attendr.API.Services
             {
                 AttendanceReport attendanceReport = new()
                 {
+                    TeacherId = teacherId,
                     StudentId = student.Id,
-                    isPresent = null,
+                    IsPresent = null,
                 };
                 attendaceReports.Add(attendanceReport);
             });
@@ -57,5 +59,74 @@ namespace Attendr.API.Services
         {
             return await _context.Attendances.FirstOrDefaultAsync(a => a.Id == id);
         }
+
+
+        public async Task<IEnumerable<StudentAttendanceReport>> GetTeachersAttendanceReport(Guid teacherId)
+        {
+            Teacher? teacher = await _context.Teachers.Include(t => t.Semester).FirstOrDefaultAsync(t => t.Id == teacherId);
+            if (teacher is null)
+                throw new Exception($"Teacher with id {teacherId} was not found");
+
+            Guid classId = teacher.Semester.ClassId;
+
+            List<Student> students = await _context.Students.Where(s => s.ClassId == classId).Include(s => s.AttendanceReports).OrderBy(s => s.Email).ToListAsync();
+
+            List<StudentAttendanceReport> studentAttendanceReports = new();
+            foreach (Student student in students)
+            {
+                StudentAttendanceReport studentAttendanceReport = new();
+                studentAttendanceReport.Student = student;
+                foreach (AttendanceReport attendanceReport in student.AttendanceReports)
+                {
+                    if (attendanceReport.TeacherId == teacherId)
+                    {
+                        studentAttendanceReport.TotalClass += 1;
+
+                        if (attendanceReport.IsPresent == true)
+                        {
+                            studentAttendanceReport.TotalClassAttended += 1;
+                        }
+                    }
+                }
+                studentAttendanceReports.Add(studentAttendanceReport);
+            }
+            return studentAttendanceReports;
+        }
+
+        public async Task<IEnumerable<AttendanceReport>> GetAttendanceReportsByAttendanceIdAsync(Guid attendanceId)
+        {
+
+            var attendanceReports = await _context.AttendanceReports.Where(a => a.AttendanceId == attendanceId).ToListAsync();
+            //_context.AttendanceReports.RemoveRange(attendanceReports);
+            //await SaveAsync();
+
+            //var attendanceToUpdate = await _context.Attendances.Include(a => a.AttendanceReports).FirstOrDefaultAsync(a => a.Id == attendance.Id);
+            //if (attendanceToUpdate is null)
+            //{
+            //    throw new Exception("Attendance not found!");
+            //}
+
+            //attendanceToUpdate.AttendanceReports.AddRange(attendance.AttendanceReports);
+            return attendanceReports;
+        }
+
+        public async Task<bool> ExistsAttendanceAsync(Guid id)
+        {
+            return await _context.Attendances.AnyAsync(a => a.Id == id);
+        }
+
+        public async Task UpdateAttendanceAsync(Attendance attendance)
+        {
+            var attendanceReports = await GetAttendanceReportsByAttendanceIdAsync(attendance.Id);
+            foreach (var attendanceReport in attendance.AttendanceReports)
+            {
+                var atrp = attendanceReports.FirstOrDefault(ar => ar.Id == attendanceReport.Id);
+                if (atrp != null)
+                {
+                    atrp.IsPresent = attendanceReport.IsPresent;
+                }
+            }
+        }
     }
 }
+

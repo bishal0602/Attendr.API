@@ -10,6 +10,8 @@ namespace Attendr.API.Profiles
             CreateMap<Entities.AttendanceReport, Models.Attendance.AttendanceReportDto>();
             CreateMap<Models.Attendance.AttendanceUpdateDto, Entities.Attendance>();
             CreateMap<Models.Attendance.AttendanceReportUpdateDto, Entities.AttendanceReport>();
+
+            CreateMap<Services.Models.StudentAttendanceReport, Models.Attendance.StudentAttendanceReportDto>();
         }
     }
 }

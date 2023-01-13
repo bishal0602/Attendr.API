@@ -16,6 +16,17 @@ namespace Attendr.API.Services
         {
             await _context.Teachers.AddAsync(teacher);
         }
+
+        public async Task<int> GetNumberOfAttendancesTakenAsync(Guid teacherId)
+        {
+            return await _context.Attendances.CountAsync(a => a.TeacherId == teacherId);
+        }
+
+        public async Task<IEnumerable<Teacher>> GetSemesterTeachersAsync(Guid classId, string semester)
+        {
+            return await _context.Teachers.Where(t => t.Semester.ClassId == classId && t.Semester.Name == semester.Trim().ToLower()).ToListAsync();
+        }
+
         public async Task<Teacher?> GetTeacherByIdAsync(Guid teacherId)
         {
             return await _context.Teachers.FirstOrDefaultAsync(t => t.Id == teacherId);

@@ -35,6 +35,7 @@ namespace Attendr.API
             builder.Services.AddDbContext<AttendrAPIDbContext>(dbContextOptions =>
             {
                 dbContextOptions.UseSqlServer(builder.Configuration["ConnectionStrings:AttendrAPIDB"]!);
+                //dbContextOptions.EnableSensitiveDataLogging();
             });
 
             return builder.Build();
