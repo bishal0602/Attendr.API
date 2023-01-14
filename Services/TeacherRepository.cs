@@ -27,8 +27,11 @@ namespace Attendr.API.Services
             return await _context.Teachers.Where(t => t.Semester.ClassId == classId && t.Semester.Name == semester.Trim().ToLower()).ToListAsync();
         }
 
-        public async Task<Teacher?> GetTeacherByIdAsync(Guid teacherId)
+        public async Task<Teacher?> GetTeacherByIdAsync(Guid teacherId, bool includeSemester = false)
         {
+            if (includeSemester)
+                return await _context.Teachers.Include(t => t.Semester).FirstOrDefaultAsync(t => t.Id == teacherId);
+
             return await _context.Teachers.FirstOrDefaultAsync(t => t.Id == teacherId);
         }
 

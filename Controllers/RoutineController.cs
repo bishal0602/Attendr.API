@@ -1,4 +1,5 @@
 ﻿using Attendr.API.Helpers;
+using Attendr.API.Models;
 using Attendr.API.Models.Routine;
 using Attendr.API.Services;
 using AutoMapper;
@@ -14,12 +15,14 @@ namespace Attendr.API.Controllers
     public class RoutineController : ControllerBase
     {
         private readonly IRoutineRepository _routineRepository;
+        private readonly ITeacherRepository _teacherRepository;
         private readonly IIdentityHelper _identityHelper;
         private readonly IMapper _mapper;
 
-        public RoutineController(IRoutineRepository routineRepository, IIdentityHelper identityHelper, IMapper mapper)
+        public RoutineController(IRoutineRepository routineRepository, ITeacherRepository teacherRepository, IIdentityHelper identityHelper, IMapper mapper)
         {
             _routineRepository = routineRepository ?? throw new ArgumentNullException(nameof(routineRepository));
+            _teacherRepository = teacherRepository ?? throw new ArgumentNullException(nameof(teacherRepository));
             _identityHelper = identityHelper ?? throw new ArgumentNullException(nameof(identityHelper));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
@@ -45,6 +48,16 @@ namespace Attendr.API.Controllers
             // TODO validate semester and weeekday
 
             Guid semesterId = await _identityHelper.GetSemesterIdUsingUserIdentityAsync(User, semester);
+
+            bool includeSemester = true;
+            var teacher = await _teacherRepository.GetTeacherByIdAsync(period.TeacherId, includeSemester);
+            if (teacher is null)
+                return NotFound(new ErrorDetails(StatusCodes.Status404NotFound, $"Teacher with id: {period.TeacherId} does not exist"));
+
+            if (teacher.Semester.Id != semesterId)
+            {
+                return BadRequest(new ErrorDetails(StatusCodes.Status400BadRequest, $"Invalid assignment of {teacher.Semester.Name} semester teacher to {semester} semester period"));
+            }
 
             Entities.Period periodToAdd = _mapper.Map<Entities.Period>(period);
             await _routineRepository.AddPeriodToRoutineAsync(semesterId, weekDay, periodToAdd);

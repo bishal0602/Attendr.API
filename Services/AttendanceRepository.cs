@@ -1,6 +1,6 @@
 ﻿using Attendr.API.DbContexts;
 using Attendr.API.Entities;
-using Attendr.API.Services.Models;
+using Attendr.API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -61,7 +61,7 @@ namespace Attendr.API.Services
         }
 
 
-        public async Task<IEnumerable<StudentAttendanceReport>> GetTeachersAttendanceReport(Guid teacherId)
+        public async Task<IEnumerable<StudentAttendanceReport>> GetTeachersAttendanceReportAsync(Guid teacherId)
         {
             Teacher? teacher = await _context.Teachers.Include(t => t.Semester).FirstOrDefaultAsync(t => t.Id == teacherId);
             if (teacher is null)
@@ -96,17 +96,7 @@ namespace Attendr.API.Services
         public async Task<IEnumerable<AttendanceReport>> GetAttendanceReportsByAttendanceIdAsync(Guid attendanceId)
         {
 
-            var attendanceReports = await _context.AttendanceReports.Where(a => a.AttendanceId == attendanceId).ToListAsync();
-            //_context.AttendanceReports.RemoveRange(attendanceReports);
-            //await SaveAsync();
-
-            //var attendanceToUpdate = await _context.Attendances.Include(a => a.AttendanceReports).FirstOrDefaultAsync(a => a.Id == attendance.Id);
-            //if (attendanceToUpdate is null)
-            //{
-            //    throw new Exception("Attendance not found!");
-            //}
-
-            //attendanceToUpdate.AttendanceReports.AddRange(attendance.AttendanceReports);
+            var attendanceReports = await _context.AttendanceReports.Include(ar => ar.Student).Where(a => a.AttendanceId == attendanceId).ToListAsync();
             return attendanceReports;
         }
 
@@ -126,6 +116,37 @@ namespace Attendr.API.Services
                     atrp.IsPresent = attendanceReport.IsPresent;
                 }
             }
+        }
+
+        public async Task<int> GetTotalAttendanceForClass(Guid classId)
+        {
+            var attendances = await _context.Attendances.Where(a => a.ClassId == classId).ToListAsync();
+            return attendances.Count();
+        }
+
+        public async Task<IEnumerable<StudentAttendanceReport>> GetOrderedClassAttendanceReportAsync(Guid classId)
+        {
+
+            List<Student> studentsInClass = await _context.Students.Where(s => s.ClassId == classId).Include(s => s.AttendanceReports).OrderBy(s => s.Email).ToListAsync();
+
+            List<StudentAttendanceReport> studentAttendanceReports = new();
+            foreach (Student student in studentsInClass)
+            {
+                StudentAttendanceReport studentAttendanceReport = new();
+                studentAttendanceReport.Student = student;
+                foreach (AttendanceReport attendanceReport in student.AttendanceReports)
+                {
+                    studentAttendanceReport.TotalClass += 1;
+
+                    if (attendanceReport.IsPresent == true)
+                    {
+                        studentAttendanceReport.TotalClassAttended += 1;
+                    }
+                }
+                studentAttendanceReports.Add(studentAttendanceReport);
+            }
+            return studentAttendanceReports.OrderBy(ar => ar.TotalClassAttended).Reverse();
+
         }
     }
 }

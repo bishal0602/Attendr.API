@@ -57,9 +57,6 @@ namespace Attendr.API.Controllers
         [HttpPut("attendance/teachers/{teacherId}/today")]
         public async Task<IActionResult> UpdateRoutine(AttendanceUpdateDto attendance)
         {
-            //var attendanceFromDb = await _attendanceRepository.GetAttendanceByIdAsync(attendance.Id);
-            //if (attendanceFromDb is null)
-            //    return NotFound(new ErrorDetails(StatusCodes.Status404NotFound, $"Attendance with id {attendance.Id} not found!"));
             bool attendanceExists = await _attendanceRepository.ExistsAttendanceAsync(attendance.Id);
             if (attendanceExists == false)
             {
@@ -70,36 +67,18 @@ namespace Attendr.API.Controllers
             await _attendanceRepository.UpdateAttendanceAsync(attendanceToUpdate);
             await _attendanceRepository.SaveAsync();
 
-            //var attendanceReports = await _attendanceRepository.GetAttendanceReportsByAttendanceIdAsync(attendance.Id);
-            //_mapper.Map(attendance.AttendanceReports, attendanceReports);
-            //await _attendanceRepository.SaveAsync();
-            //foreach (var attendancerep in attendance.AttendanceReports)
-            //{
-            //    var atrp = attendanceReports.FirstOrDefault(ar => ar.Id == attendancerep.Id);
-            //    if (atrp != null)
-            //    {
-            //        atrp.isPresent = attendancerep.IsPresent;
-            //    }
-            //}
-            //await _attendanceRepository.SaveAsync();
-
-            var attendanceReportsTest = await _attendanceRepository.GetAttendanceReportsByAttendanceIdAsync(attendance.Id);
-
-            return Ok(attendanceReportsTest);
-
-            //return NoContent();
+            return NoContent();
         }
 
-        //[Authorize("cr")]
 
-        [HttpGet("attendance/teachers/{teacherId}")]
-        public async Task<ActionResult<TeacherAttendanceReportDto>> GetTeachersAttendance([FromRoute] Guid teacherId)
+        [HttpGet("attendance/teachers/{teacherId}/report")]
+        public async Task<ActionResult<TeacherAttendanceReportDto>> GetTeachersAttendanceReport([FromRoute] Guid teacherId)
         {
             var teacher = await _teacherRepository.GetTeacherByIdAsync(teacherId);
             if (teacher is null)
                 return NotFound("Teacher not found!");
 
-            var attendanceReports = await _attendanceRepository.GetTeachersAttendanceReport(teacherId);
+            var attendanceReports = await _attendanceRepository.GetTeachersAttendanceReportAsync(teacherId);
             var attendanceReportsToReturn = _mapper.Map<List<StudentAttendanceReportDto>>(attendanceReports);
 
             TeacherAttendanceReportDto teacherAttendanceReportDto
@@ -111,6 +90,25 @@ namespace Attendr.API.Controllers
                 };
 
             return Ok(teacherAttendanceReportDto);
+        }
+
+        [HttpGet("leaderboard")]
+        public async Task<ActionResult<LeaderboardDto>> GetAttendanceLeaderboard()
+        {
+
+            Guid classId = (await _identityHelper.GetClassUsingIdentityAsync(User))!.Id;
+
+            var orderedAttendanceReports = await _attendanceRepository.GetOrderedClassAttendanceReportAsync(classId);
+            List<StudentAttendanceReportDto> orderedAttendanceReportsToReturn = _mapper.Map<List<StudentAttendanceReportDto>>(orderedAttendanceReports);
+
+            LeaderboardDto leaderboard = new LeaderboardDto()
+            {
+                Leaderboard = orderedAttendanceReportsToReturn,
+                TotalClasses = await _attendanceRepository.GetTotalAttendanceForClass(classId)
+            };
+
+            return Ok(leaderboard);
+
         }
 
     }

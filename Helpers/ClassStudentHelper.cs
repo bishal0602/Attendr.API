@@ -34,7 +34,7 @@ namespace Attendr.API.Helpers
             var studentYear = studentEmail.Substring(0, 3);
             var studentDepartment = studentEmail.Substring(3, 3);
             var studentRollNumber = studentEmail.Substring(6, 3);
-            int studentGroupAsNumber = Int32.Parse(studentRollNumber) / 24;
+            int studentGroupAsNumber = (Int32.Parse(studentRollNumber) - 1) / 24;
             if (studentGroupAsNumber > 24 * 26)
             {
                 throw new ArgumentOutOfRangeException("Student roll number could not be asssigned to group");

@@ -1,10 +1,8 @@
-﻿using Attendr.API.Entities;
-
-namespace Attendr.API.Services.Models
+﻿namespace Attendr.API.Models
 {
     public class StudentAttendanceReport
     {
-        public Student Student { get; set; }
+        public Entities.Student Student { get; set; }
         public int TotalClassAttended { get; set; }
         public int TotalClass { get; set; }
     }

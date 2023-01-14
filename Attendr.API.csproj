@@ -26,6 +26,7 @@
 
 	<ItemGroup>
 	  <Folder Include="RescourceParameters\" />
+	  <Folder Include="Services\Models\" />
 	</ItemGroup>
 
 </Project>
