@@ -57,16 +57,18 @@ namespace Attendr.API.Services
             return await _context.Classes.ToListAsync();
         }
 
-        public async Task<Class?> GetClassByIdAsync(Guid classId, bool includeStudents = false, bool includeRoutine = false)
+        public async Task<Class?> GetClassByIdAsync(Guid classId, bool includeStudents = false, bool includeRoutine = false, bool includeTeachers = false)
         {
-            IQueryable<Class> classCollection = _context.Classes.Include(c => c.Students.Where(s => includeStudents)).Include(c => c.Semesters.Where(sem => includeRoutine)).ThenInclude(sem => sem.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.Teacher);
-
+            IQueryable<Class> classCollection = ClassCollectionIncludeHelper(includeStudents, includeRoutine, includeTeachers);
             return await classCollection.FirstOrDefaultAsync(c => c.Id == classId);
         }
-        public async Task<Class?> GetClassByYearDepartGroupAsync(string classYear, string classDepartment, string classGroup, bool includeStudents = false, bool includeRoutine = false)
+        public async Task<Class?> GetClassByYearDepartGroupAsync(string classYear, string classDepartment, string classGroup, bool includeStudents = false, bool includeRoutines = false, bool includeTeachers = false)
         {
-            IQueryable<Class> classCollection = _context.Classes.Include(c => c.Students.Where(s => includeStudents)).Include(c => c.Semesters.Where(sem => includeRoutine)).ThenInclude(sem => sem.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.Teacher);
+            // removed because of performance issues
+            //IQueryable<Class> classCollection = _context.Classes.Include(c => c.Students.Where(s => includeStudents)).Include(c => c.Semesters.Where(sem => includeRoutine)).ThenInclude(sem => sem.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.Teacher);
 
+
+            IQueryable<Class> classCollection = ClassCollectionIncludeHelper(includeStudents, includeRoutines, includeTeachers);
             return await classCollection.FirstOrDefaultAsync(c => c.Year == classYear && c.Department == classDepartment && c.Group == classGroup);
         }
 
@@ -94,6 +96,38 @@ namespace Attendr.API.Services
             if (semester is null)
                 throw new Exception($"Semester with name {semesterName} could not be found");
             return semester.Id;
+        }
+
+
+        private IQueryable<Class> ClassCollectionIncludeHelper(bool includeStudents = false, bool includeRoutines = false, bool includeTeachers = false)
+        {
+            IQueryable<Class> classCollection;
+            if (includeStudents && includeRoutines && includeTeachers)
+                classCollection = _context.Classes
+                    .Include(c => c.Students)
+                    .Include(c => c.Semesters).ThenInclude(s => s.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.Teacher)
+                    .Include(c => c.Semesters).ThenInclude(s => s.Teachers);
+            if (includeStudents && includeRoutines)
+                classCollection = _context.Classes
+                    .Include(c => c.Students)
+                    .Include(c => c.Semesters).ThenInclude(s => s.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.Teacher);
+            if (includeStudents && includeTeachers)
+                classCollection = _context.Classes
+                    .Include(c => c.Students)
+                    .Include(c => c.Semesters).ThenInclude(s => s.Teachers);
+            if (includeRoutines && includeTeachers)
+                classCollection = _context.Classes
+                    .Include(c => c.Semesters).ThenInclude(s => s.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.Teacher)
+                    .Include(c => c.Semesters).ThenInclude(s => s.Teachers);
+            else if (includeRoutines)
+                classCollection = _context.Classes
+                    .Include(c => c.Semesters).ThenInclude(s => s.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.Teacher);
+            else if (includeStudents)
+                classCollection = _context.Classes.
+                    Include(c => c.Students);
+            else
+                classCollection = _context.Classes;
+            return classCollection;
         }
     }
 }

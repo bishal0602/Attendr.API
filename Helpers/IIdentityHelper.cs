@@ -5,7 +5,7 @@ namespace Attendr.API.Helpers
 {
     public interface IIdentityHelper
     {
-        Task<Class?> GetClassUsingIdentityAsync(ClaimsPrincipal User, bool includeStudents = false, bool includeRoutine = false);
+        Task<Class?> GetClassUsingIdentityAsync(ClaimsPrincipal User, bool includeStudents = false, bool includeRoutine = false, bool includeTeachers = false);
         Task<Guid> GetSemesterIdUsingUserIdentityAsync(ClaimsPrincipal User, string semester);
     }
 }

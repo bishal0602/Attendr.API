@@ -31,7 +31,7 @@ namespace Attendr.API.Helpers
             return await _classRepository.GetSemesterIdAsync(studentYear, studentDepartment, studentGroup, semester);
         }
 
-        public async Task<Entities.Class?> GetClassUsingIdentityAsync(ClaimsPrincipal User, bool includeStudents = false, bool includeRoutine = false)
+        public async Task<Entities.Class?> GetClassUsingIdentityAsync(ClaimsPrincipal User, bool includeStudents = false, bool includeRoutines = false, bool includeTeachers = false)
         {
             if (User is null)
             {
@@ -46,7 +46,7 @@ namespace Attendr.API.Helpers
             }
             (string studentYear, string studentDepartment, string studentGroup) = _classStudentHelper.GetStudentsClassDetailsFromEmail(userEmail);
 
-            var classFromDb = await _classRepository.GetClassByYearDepartGroupAsync(studentYear, studentDepartment, studentGroup, includeStudents, includeRoutine);
+            var classFromDb = await _classRepository.GetClassByYearDepartGroupAsync(studentYear, studentDepartment, studentGroup, includeStudents, includeRoutines, includeTeachers);
             return classFromDb;
         }
     }

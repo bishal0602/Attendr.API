@@ -7,10 +7,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Security.Claims;
 
 namespace Attendr.API.Controllers
 {
+    /// <response code="406">Invalid Accept header</response>
+    /// <response code="415">Invalid Content-Type header</response>
+    /// <response code="500">Internal Server Error</response>
     [Route("api/teachers")]
     [ApiController]
     [Authorize]
@@ -27,8 +31,14 @@ namespace Attendr.API.Controllers
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-
+        /// <summary>
+        /// Returns teacher with specified id
+        /// </summary>
+        /// <param name="teacherId"></param>
+        /// <returns></returns>
         [HttpGet("{teacherId}", Name = "GetTeacherById")]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorDetails))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TeacherDto))]
         public async Task<ActionResult<TeacherDto>> GetTeacher([FromRoute] Guid teacherId)
         {
             var teacher = await _teacherRepository.GetTeacherByIdAsync(teacherId);
@@ -39,7 +49,28 @@ namespace Attendr.API.Controllers
             return Ok(teacherToReturn);
         }
 
+        /// <summary>
+        /// [CR,ADMIN] Adds teacher to specified semester
+        /// </summary>
+        /// <param name="teacher"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Sample request
+        /// 
+        /// POST to /api/teachers
+        /// 
+        ///     {
+        ///       "name": "Ganesh Shrestha",
+        ///       "shortname": "GS",
+        ///       "subject": "Physics",
+        ///       "semester": "first"
+        ///     }
+        /// </remarks>
+        [Authorize(Roles = "cr,admin")]
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(CreatedSuccessResponse))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorDetails))]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity, Type = typeof(ValidationProblemDetails))]
         public async Task<IActionResult> CreateTeacher([FromBody] TeacherForCreationDto teacher)
         {
             var teacherToAdd = _mapper.Map<Entities.Teacher>(teacher);
@@ -53,11 +84,17 @@ namespace Attendr.API.Controllers
             {
                 teacherId = teacherToReturn.Id
             },
-                new { result = "Teacher successfully created!", details = "Check Loaction header to navigate!" }); // TODO : Standardize creation response
+                new CreatedSuccessResponse(nameof(teacher)));
         }
 
+        /// <summary>
+        /// Returns specified semester's teachers
+        /// </summary>
+        /// <param name="semester">Name of the semester</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TeacherDto>>> GetSemesterTeachers([FromQuery] string? semester = null)
+        public async Task<ActionResult<IEnumerable<TeacherDto>>> GetSemesterTeachers([FromQuery][BindRequired] string semester)
         {
             if (string.IsNullOrWhiteSpace(semester))
             {

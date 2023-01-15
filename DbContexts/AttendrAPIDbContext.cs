@@ -25,6 +25,8 @@ namespace Attendr.API.DbContexts
             modelBuilder.Entity<Period>().HasOne(a => a.Teacher).WithMany(p => p.Periods).OnDelete(DeleteBehavior.NoAction);
             modelBuilder.Entity<Period>().HasOne(p => p.Routine).WithMany(r => r.Periods).OnDelete(DeleteBehavior.NoAction);
 
+            modelBuilder.Entity<AttendanceReport>().HasOne(a => a.Attendance).WithMany(a => a.AttendanceReports).OnDelete(DeleteBehavior.Cascade);
+
             base.OnModelCreating(modelBuilder);
         }
     }

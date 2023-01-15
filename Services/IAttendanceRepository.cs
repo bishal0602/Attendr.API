@@ -14,5 +14,6 @@ namespace Attendr.API.Services
         Task UpdateAttendanceAsync(Attendance attendance);
         Task<IEnumerable<AttendanceReport>> GetAttendanceReportsByAttendanceIdAsync(Guid attendanceId);
         Task<IEnumerable<StudentAttendanceReport>> GetOrderedClassAttendanceReportAsync(Guid classId);
+        Task DeleteAttendanceByIdAsync(Guid attendanceId);
     }
 }

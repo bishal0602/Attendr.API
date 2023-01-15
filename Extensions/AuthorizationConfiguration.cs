@@ -12,19 +12,19 @@ namespace Attendr.API.Extensions
 
             services.AddAuthorization(authorizationOptions =>
             {
-                authorizationOptions.AddPolicy("UserCanTakeAttendance", policy =>
-                {
-                    policy.RequireAuthenticatedUser();
-                    policy.AddRequirements(
-                        new UserBelongsToClassRequirement()
-                        );
-                });
+                //authorizationOptions.AddPolicy("UserCanTakeAttendance", policy =>
+                //{
+                //    policy.RequireAuthenticatedUser();
+                //    policy.AddRequirements(
+                //        new UserBelongsToClassRequirement()
+                //        );
+                //});
             });
         }
 
         private static void ConfigureAuthorzationHandlers(this IServiceCollection services)
         {
-            services.AddScoped<IAuthorizationHandler, UserBelongsToClassHandler>();
+            //services.AddScoped<IAuthorizationHandler, UserBelongsToClassHandler>();
         }
     }
 }

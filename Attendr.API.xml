@@ -1,0 +1,255 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Attendr.API</name>
+    </assembly>
+    <members>
+        <member name="T:Attendr.API.Controllers.AttendanceController">
+            <response code="406">Invalid Accept header</response>
+            <response code="415">Invalid Content-Type header</response>
+            <response code="500">Internal Server Error</response>
+        </member>
+        <member name="M:Attendr.API.Controllers.AttendanceController.GetOrCreateTodaysAttendance(System.Guid)">
+            <summary>
+            [CR,ADMIN] Returns current date's attendance for the selected teacher
+            </summary>
+            <param name="teacherId">The id of the teacher</param>
+            <returns></returns>
+        </member>
+        <member name="M:Attendr.API.Controllers.AttendanceController.UpdateRoutine(Attendr.API.Models.Attendance.AttendanceUpdateDto)">
+            <summary>
+            [CR,ADMIN] Updates teachers current date's routine
+            </summary>
+            <param name="teacherId">The id of the teacher</param>
+            <returns></returns>
+            <remarks>
+            Sample request 
+            
+            PUT /api/attendances/attendance/teachers/cf852468-91a0-4600-32ec-08daf577f48c/today
+            
+                {
+                "id": "4277f2e9-6fda-4e61-cf36-08daf6e654b7",
+                "date": "2023-01-15T00:00:00
+                "classId": "eae1d12a-ce9e-4f26-1a5d-08daf576c683",
+                "teacherId": "cf852468-91a0-4600-32ec-08daf577f48c",
+                "attendanceReports": [
+                    {
+                        "id": "2d33a85c-c194-4c36-fd82-08daf6e654bc",
+                         "student": {
+                           "id": "253d5ade-2a25-4535-720e-08daf576c697",
+                           "name": "Julius Caesar",
+                           "email": "078bct001.julius@pcampus.edu.np",
+                           "phone": "9812345678",
+                           "classId": "eae1d12a-ce9e-4f26-1a5d-08daf576c683"
+                         },
+                        "studentId": "9b0bdd2c-5b9f-43f1-720d-08daf576c697",
+                        "isPresent": true,
+                        "teacherId": "cf852468-91a0-4600-32ec-08daf577f48c",
+                        "attendanceId": "4277f2e9-6fda-4e61-cf36-08daf6e654b7"
+                    },
+                    ]
+                }
+            </remarks>
+        </member>
+        <member name="M:Attendr.API.Controllers.AttendanceController.GetTeachersAttendanceReport(System.Guid)">
+            <summary>
+            Returns teachers attendance report
+            </summary>
+            <param name="teacherId">The id of the teacher</param>
+            <returns></returns>
+        </member>
+        <member name="M:Attendr.API.Controllers.AttendanceController.GetAttendanceLeaderboard">
+            <summary>
+            Returns class attendance leaderboard
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Attendr.API.Controllers.AttendanceController.DeleteAttendance(System.Guid)">
+            <summary>
+            [CR, ADMIN] Delete attendance
+            </summary>
+            <param name="attendanceId"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Attendr.API.Controllers.ClassController">
+            <response code="406">Invalid Accept header</response>
+            <response code="415">Invalid Content-Type header</response>
+            <response code="500">Internal Server Error</response>
+        </member>
+        <member name="M:Attendr.API.Controllers.ClassController.GetClasses">
+            <summary>
+            [ADMIN] Returns list of all classes
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Attendr.API.Controllers.ClassController.GetClassById(System.Guid,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            [ADMIN] Returns specific class by id
+            </summary>
+            <param name="classId"></param>
+            <param name="includeStudents"></param>
+            <param name="includeRoutine"></param>
+            <param name="includeTeachers"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Attendr.API.Controllers.ClassController.AddClass(Attendr.API.Models.Class.ClassCreationDto)">
+            <summary>
+            [ADMIN] Adds class to the database, along with the list of students if available from local store
+            </summary>
+            <param name="Class">Class to add</param>
+            <returns>201 Created with uri of the created class in Location header</returns>
+            <response code="422">Model Validation Error</response>
+            <remarks>
+            Sample request to add 078-BCT-B class:  
+            
+                POST /api/classes
+                {
+                    "year":"078",
+                    "department":"bct",
+                    "group":"b"
+                }
+            </remarks>
+        </member>
+        <member name="M:Attendr.API.Controllers.ClassController.GetLoggedInUsersClass(System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Returns logged in users class
+            </summary>
+            <param name="includeStudents">Whether to include students</param>
+            <param name="includeRoutines">Whether to include routines</param>
+            <param name="includeTeachers">Whether to include teachers</param>
+            <returns>An ActionResult of type Class</returns>
+            <response code="200">Returns the logged in user's class</response>
+        </member>
+        <member name="M:Attendr.API.Controllers.ClassController.GetSemesters">
+            <summary>
+            Returns list of semesters
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Attendr.API.Controllers.RoutineController">
+            <response code="406">Invalid Accept header</response>
+            <response code="415">Invalid Content-Type header</response>
+            <response code="500">Internal Server Error</response>
+        </member>
+        <member name="M:Attendr.API.Controllers.RoutineController.GetRoutine(System.String)">
+            <summary>
+            Returns semesters routine
+            </summary>
+            <param name="semester">Name of the semester</param>
+            <returns></returns>
+        </member>
+        <member name="M:Attendr.API.Controllers.RoutineController.AddPeriodToRoutine(System.String,System.String,Attendr.API.Models.Routine.PeriodCreationDto)">
+            <summary>
+            [CR, ADMIN] Adds period to routine
+            </summary>
+            <param name="semester">Name of the semester</param>
+            <param name="weekDay">Day of the week</param>
+            <param name="period">The period to add</param>
+            <returns></returns>
+            <remarks>
+            Sample request
+            
+            POST to api/routines/semesters/second/monday/periods
+            
+                {
+                    "startTime": "11:45am",
+                    "endTime": "12:30pm",
+                    "teacherId":"cf852468-91a0-4600-32ec-08daf577f48c"
+                }
+            </remarks>
+        </member>
+        <member name="M:Attendr.API.Controllers.RoutineController.GetRoutine(System.Guid)">
+            <summary>
+            Returns routine by id
+            </summary>
+            <param name="routineId">Id of the routine</param>
+            <returns></returns>
+        </member>
+        <member name="T:Attendr.API.Controllers.TeacherController">
+            <response code="406">Invalid Accept header</response>
+            <response code="415">Invalid Content-Type header</response>
+            <response code="500">Internal Server Error</response>
+        </member>
+        <member name="M:Attendr.API.Controllers.TeacherController.GetTeacher(System.Guid)">
+            <summary>
+            Returns teacher with specified id
+            </summary>
+            <param name="teacherId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Attendr.API.Controllers.TeacherController.CreateTeacher(Attendr.API.Models.Teacher.TeacherForCreationDto)">
+            <summary>
+            [CR,ADMIN] Adds teacher to specified semester
+            </summary>
+            <param name="teacher"></param>
+            <returns></returns>
+            <remarks>
+            Sample request
+            
+            POST to /api/teachers
+            
+                {
+                  "name": "Ganesh Shrestha",
+                  "shortname": "GS",
+                  "subject": "Physics",
+                  "semester": "first"
+                }
+            </remarks>
+        </member>
+        <member name="M:Attendr.API.Controllers.TeacherController.GetSemesterTeachers(System.String)">
+            <summary>
+            Returns specified semester's teachers
+            </summary>
+            <param name="semester">Name of the semester</param>
+            <returns></returns>
+            <exception cref="T:System.ArgumentException"></exception>
+        </member>
+        <member name="T:Attendr.API.Migrations.Initial">
+            <inheritdoc />
+        </member>
+        <member name="M:Attendr.API.Migrations.Initial.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Attendr.API.Migrations.Initial.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Attendr.API.Migrations.Initial.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Attendr.API.Models.Class.ClassDto">
+            <summary>
+            A class with id, year, department, group and optionally list of students and semester routines and teachers
+            </summary>
+        </member>
+        <member name="P:Attendr.API.Models.Class.ClassDto.Id">
+            <summary>
+            The id of the class
+            </summary>
+        </member>
+        <member name="P:Attendr.API.Models.Class.ClassDto.Year">
+            <summary>
+            The admission year of the class
+            </summary>
+        </member>
+        <member name="P:Attendr.API.Models.Class.ClassDto.Department">
+            <summary>
+            The department of the class
+            </summary>
+        </member>
+        <member name="P:Attendr.API.Models.Class.ClassDto.Group">
+            <summary>
+            The group of class
+            </summary>
+        </member>
+        <member name="P:Attendr.API.Models.Class.ClassDto.Students">
+            <summary>
+            List of students in class
+            </summary>
+        </member>
+        <member name="P:Attendr.API.Models.Class.ClassDto.Semesters">
+            <summary>
+            List of semesters, further contains list of routines and teachers
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -17,7 +17,7 @@ namespace Attendr.API.Services
 
         public async Task<Attendance?> GetAttendanceAsync(Guid teacherId, DateTime date)
         {
-            return await _context.Attendances.Include(a => a.AttendanceReports).FirstOrDefaultAsync(a => a.TeacherId == teacherId && a.Date == date);
+            return await _context.Attendances.Include(a => a.AttendanceReports).ThenInclude(ar => ar.Student).FirstOrDefaultAsync(a => a.TeacherId == teacherId && a.Date == date);
         }
 
         public async Task<Attendance> CreateAttendanceAsync(Guid teacherId, Guid classId, DateTime date)
@@ -146,6 +146,18 @@ namespace Attendr.API.Services
                 studentAttendanceReports.Add(studentAttendanceReport);
             }
             return studentAttendanceReports.OrderBy(ar => ar.TotalClassAttended).Reverse();
+
+        }
+
+        public async Task DeleteAttendanceByIdAsync(Guid attendanceId)
+        {
+            // TODO
+            var attendance = await _context.Attendances.FirstOrDefaultAsync(a => a.Id == attendanceId);
+            if (attendance == null)
+            {
+                throw new ArgumentException($"Attendance with id {attendanceId} not found!");
+            }
+            _context.Attendances.Remove(attendance);
 
         }
     }

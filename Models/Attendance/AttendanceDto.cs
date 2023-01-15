@@ -7,7 +7,7 @@ namespace Attendr.API.Models.Attendance
     {
         public Guid Id { get; set; }
         public DateTime Date { get; set; }
-        public ClassDto Class { get; set; }
+        public ClassWithoutStudentsDto Class { get; set; }
         public Guid ClassId { get; set; }
         public TeacherDto Teacher { get; set; }
         public Guid TeacherId { get; set; }

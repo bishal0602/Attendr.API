@@ -10,6 +10,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Attendr.API.Controllers
 {
+    /// <response code="406">Invalid Accept header</response>
+    /// <response code="415">Invalid Content-Type header</response>
+    /// <response code="500">Internal Server Error</response>
     [Route("api/attendances")]
     [ApiController]
     [Authorize]
@@ -28,12 +31,17 @@ namespace Attendr.API.Controllers
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        //[Authorize("cr")]
-
+        /// <summary>
+        /// [CR,ADMIN] Returns current date's attendance for the selected teacher
+        /// </summary>
+        /// <param name="teacherId">The id of the teacher</param>
+        /// <returns></returns>
+        [Authorize(Roles = "cr,admin")]
         [HttpGet("attendance/teachers/{teacherId}/today")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AttendanceDto))]
         public async Task<ActionResult<AttendanceDto>> GetOrCreateTodaysAttendance([FromRoute] Guid teacherId)
         {
-            // check teacher exists
+            // TODO check teacher exists
 
             DateTime date = DateTime.Today;
 
@@ -52,11 +60,52 @@ namespace Attendr.API.Controllers
 
         }
 
-        //[Authorize("cr")]
 
+        /// <summary>
+        /// [CR,ADMIN] Updates teachers current date's routine
+        /// </summary>
+        /// <param name="teacherId">The id of the teacher</param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Sample request 
+        /// 
+        /// PUT /api/attendances/attendance/teachers/cf852468-91a0-4600-32ec-08daf577f48c/today
+        /// 
+        ///     {
+        ///     "id": "4277f2e9-6fda-4e61-cf36-08daf6e654b7",
+        ///     "date": "2023-01-15T00:00:00
+        ///     "classId": "eae1d12a-ce9e-4f26-1a5d-08daf576c683",
+        ///     "teacherId": "cf852468-91a0-4600-32ec-08daf577f48c",
+        ///     "attendanceReports": [
+        ///         {
+        ///             "id": "2d33a85c-c194-4c36-fd82-08daf6e654bc",
+        ///              "student": {
+        ///                "id": "253d5ade-2a25-4535-720e-08daf576c697",
+        ///                "name": "Julius Caesar",
+        ///                "email": "078bct001.julius@pcampus.edu.np",
+        ///                "phone": "9812345678",
+        ///                "classId": "eae1d12a-ce9e-4f26-1a5d-08daf576c683"
+        ///              },
+        ///             "studentId": "9b0bdd2c-5b9f-43f1-720d-08daf576c697",
+        ///             "isPresent": true,
+        ///             "teacherId": "cf852468-91a0-4600-32ec-08daf577f48c",
+        ///             "attendanceId": "4277f2e9-6fda-4e61-cf36-08daf6e654b7"
+        ///         },
+        ///         ]
+        ///     }
+        /// </remarks>
+        [Authorize(Roles = "cr,admin")]
         [HttpPut("attendance/teachers/{teacherId}/today")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorDetails))]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity, Type = typeof(ValidationProblemDetails))]
         public async Task<IActionResult> UpdateRoutine(AttendanceUpdateDto attendance)
         {
+            if (attendance.Date != DateTime.Today)
+            {
+                return BadRequest(new ErrorDetails(StatusCodes.Status400BadRequest, "Attendance could not be updated", "Attempt to update attendance from other day"));
+            }
             bool attendanceExists = await _attendanceRepository.ExistsAttendanceAsync(attendance.Id);
             if (attendanceExists == false)
             {
@@ -70,8 +119,14 @@ namespace Attendr.API.Controllers
             return NoContent();
         }
 
-
+        /// <summary>
+        /// Returns teachers attendance report
+        /// </summary>
+        /// <param name="teacherId">The id of the teacher</param>
+        /// <returns></returns>
         [HttpGet("attendance/teachers/{teacherId}/report")]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorDetails))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TeacherAttendanceReportDto))]
         public async Task<ActionResult<TeacherAttendanceReportDto>> GetTeachersAttendanceReport([FromRoute] Guid teacherId)
         {
             var teacher = await _teacherRepository.GetTeacherByIdAsync(teacherId);
@@ -92,7 +147,13 @@ namespace Attendr.API.Controllers
             return Ok(teacherAttendanceReportDto);
         }
 
+        /// <summary>
+        /// Returns class attendance leaderboard
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("leaderboard")]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorDetails))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LeaderboardDto))]
         public async Task<ActionResult<LeaderboardDto>> GetAttendanceLeaderboard()
         {
 
@@ -109,6 +170,29 @@ namespace Attendr.API.Controllers
 
             return Ok(leaderboard);
 
+        }
+
+        /// <summary>
+        /// [CR, ADMIN] Delete attendance
+        /// </summary>
+        /// <param name="attendanceId"></param>
+        /// <returns></returns>
+        [Authorize(Roles = "cr,admin")]
+        [HttpDelete("{attendanceId}")]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorDetails))]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public async Task<IActionResult> DeleteAttendance(Guid attendanceId)
+        {
+            bool attendanceExists = await _attendanceRepository.ExistsAttendanceAsync(attendanceId);
+            if (!attendanceExists)
+            {
+                return NotFound(new ErrorDetails(StatusCodes.Status404NotFound, $"Attendance not found!"));
+            }
+
+            await _attendanceRepository.DeleteAttendanceByIdAsync(attendanceId);
+            await _attendanceRepository.SaveAsync();
+
+            return NoContent();
         }
 
     }

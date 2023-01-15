@@ -3,6 +3,9 @@ using System.Security.Claims;
 
 namespace Attendr.API.Authorization
 {
+
+    // just for testing and future references
+
     public class UserBelongsToClassHandler : AuthorizationHandler<UserBelongsToClassRequirement>
     {
         //private readonly IHttpContextAccessor _httpContextAccessor;
@@ -24,7 +27,6 @@ namespace Attendr.API.Authorization
             // return;
 
 
-
             var identity = context.User.Identity;
             if (identity is null)
             {
@@ -36,10 +38,9 @@ namespace Attendr.API.Authorization
             {
                 throw new ArgumentException("Role claims not provided");
             }
-            if (!roles.Contains("cr"))
+            if (roles.Contains("student"))
             {
-                context.Fail();
-
+                context.Fail(new AuthorizationFailureReason(new UserBelongsToClassHandler(), "User is not a student"));
             }
             await Task.Delay(500);
             // all checks out

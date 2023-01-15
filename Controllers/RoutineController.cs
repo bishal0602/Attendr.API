@@ -1,14 +1,17 @@
-﻿using Attendr.API.Helpers;
+﻿using Attendr.API.Entities;
+using Attendr.API.Helpers;
 using Attendr.API.Models;
 using Attendr.API.Models.Routine;
 using Attendr.API.Services;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Attendr.API.Controllers
 {
+    /// <response code="406">Invalid Accept header</response>
+    /// <response code="415">Invalid Content-Type header</response>
+    /// <response code="500">Internal Server Error</response>
     [Route("api/routines")]
     [ApiController]
     [Authorize]
@@ -27,7 +30,13 @@ namespace Attendr.API.Controllers
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
+        /// <summary>
+        /// Returns semesters routine
+        /// </summary>
+        /// <param name="semester">Name of the semester</param>
+        /// <returns></returns>
         [HttpGet("semesters/{semester}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<RoutineDto>))]
         public async Task<ActionResult<IEnumerable<RoutineDto>>> GetRoutine(string semester)
         {
             // TODO validate semester
@@ -41,8 +50,30 @@ namespace Attendr.API.Controllers
             return Ok(routineToReturn);
         }
 
+        /// <summary>
+        /// [CR, ADMIN] Adds period to routine
+        /// </summary>
+        /// <param name="semester">Name of the semester</param>
+        /// <param name="weekDay">Day of the week</param>
+        /// <param name="period">The period to add</param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Sample request
+        /// 
+        /// POST to api/routines/semesters/second/monday/periods
+        /// 
+        ///     {
+        ///         "startTime": "11:45am",
+        ///         "endTime": "12:30pm",
+        ///         "teacherId":"cf852468-91a0-4600-32ec-08daf577f48c"
+        ///     }
+        /// </remarks>
+        [Authorize(Roles = "cr,admin")]
         [HttpPost("semesters/{semester}/{weekDay}/periods")]
-        //[Authorize("cr")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorDetails))]
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(CreatedSuccessResponse))]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity, Type = typeof(ValidationProblemDetails))]
         public async Task<IActionResult> AddPeriodToRoutine([FromRoute] string semester, [FromRoute] string weekDay, [FromBody] PeriodCreationDto period)
         {
             // TODO validate semester and weeekday
@@ -66,14 +97,23 @@ namespace Attendr.API.Controllers
             return CreatedAtRoute("GetRoutine", new
             {
                 routineId = periodToAdd.RoutineId
-            }, "Period Added. Check Location Header to navigate to routine"); // TODO: Standaradize success response
+            }, new CreatedSuccessResponse(nameof(period)));
 
         }
 
+        /// <summary>
+        /// Returns routine by id
+        /// </summary>
+        /// <param name="routineId">Id of the routine</param>
+        /// <returns></returns>
         [HttpGet("{routineId}", Name = "GetRoutine")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RoutineDto))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorDetails))]
         public async Task<ActionResult<RoutineDto>> GetRoutine(Guid routineId)
         {
             var routine = await _routineRepository.GetRoutineByIdAsync(routineId);
+            if (routine is null)
+                return NotFound(new ErrorDetails(StatusCodes.Status404NotFound, $"Routine not found"));
 
             RoutineDto routineToReturn = _mapper.Map<RoutineDto>(routine);
 

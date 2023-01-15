@@ -1,6 +1,7 @@
 ﻿using Attendr.API.Models;
 using Microsoft.AspNetCore.Diagnostics;
 using Serilog;
+using System;
 using System.Net;
 
 namespace Attendr.API.Extensions
@@ -19,6 +20,14 @@ namespace Attendr.API.Extensions
             try
             {
                 await _next(httpContext);
+                if (httpContext.Response.StatusCode == StatusCodes.Status401Unauthorized)
+                {
+                    await httpContext.Response.WriteAsJsonAsync(new ErrorDetails(StatusCodes.Status401Unauthorized, "Authenticated failed", "Provide a valid token."));
+                }
+                if (httpContext.Response.StatusCode == StatusCodes.Status403Forbidden)
+                {
+                    await httpContext.Response.WriteAsJsonAsync(new ErrorDetails(StatusCodes.Status403Forbidden, "Forbidden rescource", "You are not permitted to access this rescource."));
+                }
             }
             catch (Exception ex)
             {
