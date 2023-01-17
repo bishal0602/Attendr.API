@@ -51,16 +51,16 @@ namespace Attendr.API.Controllers
         /// </summary>
         /// <param name="classId"></param>
         /// <param name="includeStudents"></param>
-        /// <param name="includeRoutine"></param>
+        /// <param name="includeRoutines"></param>
         /// <param name="includeTeachers"></param>
         /// <returns></returns>
         [Authorize(Roles = "admin")]
         [HttpGet("{classId}", Name = "GetClassById")]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorDetails))]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ClassDto))]
-        public async Task<IActionResult> GetClassById([FromRoute] Guid classId, [FromQuery] bool includeStudents = false, bool includeRoutine = false, bool includeTeachers = false)
+        public async Task<IActionResult> GetClassById([FromRoute] Guid classId, [FromQuery] bool includeStudents = false, bool includeRoutines = false, bool includeTeachers = false)
         {
-            var classFromDb = await _classRepository.GetClassByIdAsync(classId, includeStudents, includeRoutine, includeTeachers);
+            var classFromDb = await _classRepository.GetClassByIdAsync(classId, includeStudents, includeRoutines, includeTeachers);
 
             if (classFromDb is null)
                 return NotFound(new ErrorDetails(StatusCodes.Status404NotFound, $"Class with id {classId} does not exist!"));

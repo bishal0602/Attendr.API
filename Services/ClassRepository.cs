@@ -8,8 +8,8 @@ namespace Attendr.API.Services
 {
     public class ClassRepository : IClassRepository
     {
-        private static readonly string[] ordinalCounts = new string[] { "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth" };
-        private static readonly string[] weekdays = new string[] { "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday" };
+        private static readonly string[] _ordinalCounts = new string[] { "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth" };
+        private static readonly string[] _weekdays = new string[] { "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday" };
 
         private readonly AttendrAPIDbContext _context;
         private readonly IClassStudentHelper _classStudentHelper;
@@ -20,22 +20,22 @@ namespace Attendr.API.Services
             _classStudentHelper = classStudentHelper ?? throw new ArgumentNullException(nameof(classStudentHelper));
         }
 
-        private List<Semester> GenerateSemesters()
+        private static List<Semester> GenerateSemesters()
         {
-            List<Semester> semesters = new List<Semester>();
-            foreach (string ordinal in ordinalCounts)
+            List<Semester> semesters = new();
+            foreach (string ordinal in _ordinalCounts)
             {
-                Semester semester = new Semester() { Name = ordinal };
+                Semester semester = new() { Name = ordinal };
                 semester.Routines.AddRange(GenerateDayRoutines());
                 semesters.Add(semester);
 
             }
             return semesters;
         }
-        private List<Routine> GenerateDayRoutines()
+        private static List<Routine> GenerateDayRoutines()
         {
-            List<Routine> dayRoutines = new List<Routine>();
-            foreach (string weekday in weekdays)
+            List<Routine> dayRoutines = new();
+            foreach (string weekday in _weekdays)
             {
                 dayRoutines.Add(new Routine() { WeekDay = weekday });
             }
@@ -82,10 +82,6 @@ namespace Attendr.API.Services
         {
             return await _context.Semesters.Where(s => s.ClassId == classId).ToListAsync();
         }
-        public async Task<bool> SaveAsync()
-        {
-            return (await _context.SaveChangesAsync() >= 0);
-        }
 
         public async Task<Guid> GetSemesterIdAsync(string studentYear, string studentDepartment, string studentGroup, string semesterName)
         {
@@ -101,33 +97,19 @@ namespace Attendr.API.Services
 
         private IQueryable<Class> ClassCollectionIncludeHelper(bool includeStudents = false, bool includeRoutines = false, bool includeTeachers = false)
         {
-            IQueryable<Class> classCollection;
-            if (includeStudents && includeRoutines && includeTeachers)
-                classCollection = _context.Classes
-                    .Include(c => c.Students)
-                    .Include(c => c.Semesters).ThenInclude(s => s.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.Teacher)
-                    .Include(c => c.Semesters).ThenInclude(s => s.Teachers);
-            if (includeStudents && includeRoutines)
-                classCollection = _context.Classes
-                    .Include(c => c.Students)
-                    .Include(c => c.Semesters).ThenInclude(s => s.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.Teacher);
-            if (includeStudents && includeTeachers)
-                classCollection = _context.Classes
-                    .Include(c => c.Students)
-                    .Include(c => c.Semesters).ThenInclude(s => s.Teachers);
-            if (includeRoutines && includeTeachers)
-                classCollection = _context.Classes
-                    .Include(c => c.Semesters).ThenInclude(s => s.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.Teacher)
-                    .Include(c => c.Semesters).ThenInclude(s => s.Teachers);
-            else if (includeRoutines)
-                classCollection = _context.Classes
-                    .Include(c => c.Semesters).ThenInclude(s => s.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.Teacher);
-            else if (includeStudents)
-                classCollection = _context.Classes.
-                    Include(c => c.Students);
-            else
-                classCollection = _context.Classes;
+            IQueryable<Class> classCollection = _context.Classes;
+            if (includeStudents)
+                classCollection = classCollection.Include(c => c.Students);
+            if (includeRoutines)
+                classCollection = classCollection.Include(c => c.Semesters).ThenInclude(s => s.Routines).ThenInclude(r => r.Periods).ThenInclude(p => p.Teacher);
+            if (includeTeachers)
+                classCollection = classCollection.Include(c => c.Semesters).ThenInclude(s => s.Teachers);
             return classCollection;
+        }
+
+        public async Task<bool> SaveAsync()
+        {
+            return (await _context.SaveChangesAsync() >= 0);
         }
     }
 }

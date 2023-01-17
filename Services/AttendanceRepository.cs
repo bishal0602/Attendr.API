@@ -50,11 +50,6 @@ namespace Attendr.API.Services
             return attendance;
         }
 
-        public async Task<bool> SaveAsync()
-        {
-            return (await _context.SaveChangesAsync() >= 0);
-        }
-
         public async Task<Attendance?> GetAttendanceByIdAsync(Guid id)
         {
             return await _context.Attendances.FirstOrDefaultAsync(a => a.Id == id);
@@ -159,6 +154,11 @@ namespace Attendr.API.Services
             }
             _context.Attendances.Remove(attendance);
 
+        }
+
+        public async Task<bool> SaveAsync()
+        {
+            return (await _context.SaveChangesAsync() >= 0);
         }
     }
 }

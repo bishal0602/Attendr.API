@@ -35,7 +35,6 @@ namespace Attendr.API.Services
             return await _context.Teachers.FirstOrDefaultAsync(t => t.Id == teacherId);
         }
 
-
         public async Task<bool> SaveAsync()
         {
             return (await _context.SaveChangesAsync() >= 0);

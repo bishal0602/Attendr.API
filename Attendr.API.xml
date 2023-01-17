@@ -88,7 +88,7 @@
             </summary>
             <param name="classId"></param>
             <param name="includeStudents"></param>
-            <param name="includeRoutine"></param>
+            <param name="includeRoutines"></param>
             <param name="includeTeachers"></param>
             <returns></returns>
         </member>
