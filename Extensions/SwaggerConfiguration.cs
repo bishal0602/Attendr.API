@@ -6,7 +6,7 @@ namespace Attendr.API.Extensions
 {
     public static class SwaggerConfiguration
     {
-        public static void ConfigureSwagger(this IServiceCollection services)
+        public static IServiceCollection ConfigureSwagger(this IServiceCollection services)
         {
             services.AddSwaggerGen(setupAction =>
             {
@@ -46,6 +46,7 @@ namespace Attendr.API.Extensions
 
                 setupAction.IncludeXmlComments(xmlCommentsFullPath);
             });
+            return services;
         }
     }
 }

@@ -6,7 +6,7 @@ namespace Attendr.API.Extensions
 {
     public static class AuthorizationConfiguration
     {
-        public static void ConfigureAuthorization(this IServiceCollection services)
+        public static IServiceCollection ConfigureAuthorization(this IServiceCollection services)
         {
             services.ConfigureAuthorzationHandlers();
 
@@ -20,6 +20,7 @@ namespace Attendr.API.Extensions
                 //        );
                 //});
             });
+            return services;
         }
 
         private static void ConfigureAuthorzationHandlers(this IServiceCollection services)

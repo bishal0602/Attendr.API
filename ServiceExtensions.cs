@@ -17,21 +17,23 @@ namespace Attendr.API
         public static WebApplication ConfigureServices(this WebApplicationBuilder builder)
         {
             builder.Host.UseSerilog();
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.ConfigureSwagger();
 
-            builder.Services.AddHttpContextAccessor();
-            builder.Services.ConfigureControllers().ConfigureInputFormatter();
-            builder.Services.ConfigureOutputFormatter();
-            builder.Services.ConfigureCors();
+            builder.Services.AddEndpointsApiExplorer()
+                            .ConfigureSwagger();
+
+            builder.Services.ConfigureControllers()
+                            .ConfigureInputFormatter();
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-            builder.Services.ConfigureIdentityServer();
-            builder.Services.ConfigureAuthorization();
+            builder.Services.ConfigureIdentityServer()
+                            .ConfigureAuthorization();
 
-            builder.Services.AddAutoMapper(typeof(Program));
-            builder.Services.ConfigureHelpers();
-            builder.Services.ConfigureServices();
+            builder.Services.ConfigureServices()
+                            .ConfigureHelpers()
+                            .AddAutoMapper(typeof(Program))
+                            .AddHttpContextAccessor()
+                            .ConfigureOutputFormatter()
+                            .ConfigureCors();
 
             builder.Services.AddDbContext<AttendrAPIDbContext>(dbContextOptions =>
             {

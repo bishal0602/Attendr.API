@@ -5,7 +5,7 @@ namespace Attendr.API.Extensions
 {
     public static class OutputFormatterConfiguration
     {
-        public static void ConfigureOutputFormatter(this IServiceCollection services)
+        public static IServiceCollection ConfigureOutputFormatter(this IServiceCollection services)
         {
             services.Configure<MvcOptions>(configureOptions =>
             {
@@ -21,6 +21,8 @@ namespace Attendr.API.Extensions
                     }
                 }
             });
+
+            return services;
         }
     }
 }

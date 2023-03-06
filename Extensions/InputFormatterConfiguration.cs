@@ -5,10 +5,10 @@ namespace Attendr.API.Extensions
 {
     public static class InputFormatterConfiguration
     {
-        public static void ConfigureInputFormatter(this IMvcBuilder builder)
+        public static IMvcBuilder ConfigureInputFormatter(this IMvcBuilder builder)
         {
 
-            builder.AddNewtonsoftJson(options =>
+            return builder.AddNewtonsoftJson(options =>
              {
                  options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
              })

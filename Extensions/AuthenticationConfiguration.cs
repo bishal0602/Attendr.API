@@ -4,7 +4,7 @@ namespace Attendr.API.Extensions
 {
     public static class AuthenticationConfiguration
     {
-        public static void ConfigureIdentityServer(this IServiceCollection services)
+        public static IServiceCollection ConfigureIdentityServer(this IServiceCollection services)
         {
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -17,6 +17,7 @@ namespace Attendr.API.Extensions
                         ValidTypes = new[] { "at+jwt" }
                     };
                 });
+            return services;
         }
     }
 }
