@@ -20,12 +20,30 @@ namespace Attendr.API.DbContexts
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<AttendanceReport>().HasOne(ar => ar.Student).WithMany(s => s.AttendanceReports).OnDelete(DeleteBehavior.NoAction);
-            modelBuilder.Entity<Attendance>().HasOne(a => a.Teacher).WithMany(t => t.Attendances).OnDelete(DeleteBehavior.NoAction);
-            modelBuilder.Entity<Period>().HasOne(a => a.Teacher).WithMany(p => p.Periods).OnDelete(DeleteBehavior.NoAction);
-            modelBuilder.Entity<Period>().HasOne(p => p.Routine).WithMany(r => r.Periods).OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<AttendanceReport>()
+                        .HasOne(ar => ar.Student)
+                        .WithMany(s => s.AttendanceReports)
+                        .OnDelete(DeleteBehavior.NoAction);
 
-            modelBuilder.Entity<AttendanceReport>().HasOne(a => a.Attendance).WithMany(a => a.AttendanceReports).OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Attendance>()
+                        .HasOne(a => a.Teacher)
+                        .WithMany(t => t.Attendances)
+                        .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Period>()
+                        .HasOne(a => a.Teacher)
+                        .WithMany(p => p.Periods)
+                        .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Period>()
+                        .HasOne(p => p.Routine)
+                        .WithMany(r => r.Periods)
+                        .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<AttendanceReport>()
+                        .HasOne(a => a.Attendance)
+                        .WithMany(a => a.AttendanceReports)
+                        .OnDelete(DeleteBehavior.Cascade);
 
             base.OnModelCreating(modelBuilder);
         }
